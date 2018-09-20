@@ -29,8 +29,18 @@ export default {
       .y((d) => { return yScale(d.value) })
 
     const n = 14
-    const implementationStart = moment().add(5, 'week')
+    const preStart = moment()
+    const implementationStart = moment().add(4, 'week')
     const testStart = moment().add(6, 'week')
+    const testEnd = moment().add(n - 1, 'week')
+
+    // const parseTime = d3.timeParse('%Y-%m-%d')
+    //
+    // d3.csv('/static/chart-for-joe.csv', (d) => {
+    //   d.date_week = parseTime(d.date_week)
+    //   return d
+    // }).then((data) => {
+    // })
 
     new Promise((resolve) => {
       const randomUniform = d3.randomUniform(100)
@@ -70,10 +80,15 @@ export default {
         .attr('width', xScale(testStart))
         .attr('height', height)
 
+      const xAxis = d3.axisBottom(xScale)
+        .tickValues([preStart, implementationStart, testStart, testEnd])
+        .tickFormat(d3.timeFormat('%b %d'))
+
+      // first chart
       g.append('g')
         .attr('class', 'x-axis')
         .attr('transform', `translate(0,${height})`)
-        .call(d3.axisBottom(xScale))
+        .call(xAxis)
 
       const dimension = g.selectAll('.dimension')
         .attr('class', 'dimension')
@@ -99,6 +114,38 @@ export default {
         .attr('y1', 0)
         .attr('x2', xScale(testStart))
         .attr('y2', height)
+
+      g.append('line')
+        .attr('class', 'treatmentPre')
+        .attr('x1', 0)
+        .attr('y1', yScale(50))
+        .attr('x2', xScale(implementationStart))
+        .attr('y2', yScale(50))
+        .style('stroke', colorScale('treatmentIndex'))
+
+      g.append('line')
+        .attr('class', 'treatmentPost')
+        .attr('x1', xScale(testStart))
+        .attr('y1', yScale(55))
+        .attr('x2', xScale(testEnd))
+        .attr('y2', yScale(55))
+        .style('stroke', colorScale('treatmentIndex'))
+
+      g.append('line')
+        .attr('class', 'controlPre')
+        .attr('x1', 0)
+        .attr('y1', yScale(40))
+        .attr('x2', xScale(implementationStart))
+        .attr('y2', yScale(40))
+        .style('stroke', colorScale('controlIndex'))
+
+      g.append('line')
+        .attr('class', 'controlPost')
+        .attr('x1', xScale(testStart))
+        .attr('y1', yScale(45))
+        .attr('x2', xScale(testEnd))
+        .attr('y2', yScale(45))
+        .style('stroke', colorScale('controlIndex'))
     })
   }
 }
@@ -123,5 +170,25 @@ export default {
 
 .preTestBackground
   fill: #444444
-  opacity: 0.25
+  opacity: 0.10
+
+.treatmentPre
+  fill: none
+  stroke: steelblue
+  stroke-width: 1.5px
+
+.treatmentPost
+  fill: none
+  stroke: steelblue
+  stroke-width: 1.5px
+
+.controlPre
+  fill: none
+  stroke: orange
+  stroke-width: 1.5px
+
+.controlPost
+  fill: none
+  stroke: orange
+  stroke-width: 1.5px
 </style>

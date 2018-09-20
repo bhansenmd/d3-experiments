@@ -1,0 +1,21 @@
+{
+  "test": {
+    "date_implementation_start": "2018-08-08",
+    "date_implementation_end": "2018-08-01",
+    "date_test_start": "2018-08-09",
+    "date_test_end": "2018-11-28"
+  },
+  "reports": [
+    {
+      "date_week": "2018-04-26",
+      "treatment_value": 0,
+      "treatment_index": 0,
+      "treatment_pre": 573.2031,
+      "treatment_post": null,
+      "control_value": 0,
+      "control_index": 0,
+      "control_pre": 600.8315,
+      "control_post": null
+    }
+  ]
+}

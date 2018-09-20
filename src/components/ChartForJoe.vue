@@ -28,8 +28,11 @@ export default {
       .x((d) => { return xScale(d.date) })
       .y((d) => { return yScale(d.value) })
 
+    const n = 14
+    const implementationStart = moment().add(5, 'week')
+    const testStart = moment().add(6, 'week')
+
     new Promise((resolve) => {
-      const n = 14
       const randomUniform = d3.randomUniform(100)
       const data = d3.range(n).map((d) => {
         return {
@@ -60,21 +63,42 @@ export default {
 
       colorScale.domain(dimensions.map((dim) => { return dim.id }))
 
+      g.append('rect')
+        .attr('class', 'preTestBackground')
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('width', xScale(testStart))
+        .attr('height', height)
+
       g.append('g')
         .attr('class', 'x-axis')
         .attr('transform', `translate(0,${height})`)
         .call(d3.axisBottom(xScale))
 
       const dimension = g.selectAll('.dimension')
+        .attr('class', 'dimension')
         .data(dimensions)
         .enter()
         .append('g')
-        .attr('class', 'dimension')
 
       dimension.append('path')
         .attr('class', 'line')
         .attr('d', (d) => { return line(d.values) })
         .style('stroke', (d) => { return colorScale(d.id) })
+
+      g.append('line')
+        .attr('class', 'implementationStart')
+        .attr('x1', xScale(implementationStart))
+        .attr('y1', 0)
+        .attr('x2', xScale(implementationStart))
+        .attr('y2', height)
+
+      g.append('line')
+        .attr('class', 'testStart')
+        .attr('x1', xScale(testStart))
+        .attr('y1', 0)
+        .attr('x2', xScale(testStart))
+        .attr('y2', height)
     })
   }
 }
@@ -85,4 +109,19 @@ export default {
   fill: none
   stroke: steelblue
   stroke-width: 1.5px
+
+.implementationStart
+  stroke-width: 1.5px
+  stroke: #444444
+  stroke-dasharray: 4px
+  fill: none
+
+.testStart
+  stroke-width: 1.5px
+  stroke: #444444
+  fill: none
+
+.preTestBackground
+  fill: #444444
+  opacity: 0.25
 </style>

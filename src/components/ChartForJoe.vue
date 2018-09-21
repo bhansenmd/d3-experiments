@@ -5,6 +5,7 @@
 
 <script>
 import * as d3 from 'd3'
+import 'd3-selection-multi'
 import * as moment from 'moment'
 
 export default {
@@ -115,37 +116,53 @@ export default {
         .attr('x2', xScale(testStart))
         .attr('y2', height)
 
-      g.append('line')
-        .attr('class', 'treatmentPre')
-        .attr('x1', 0)
-        .attr('y1', yScale(50))
-        .attr('x2', xScale(implementationStart))
-        .attr('y2', yScale(50))
-        .style('stroke', colorScale('treatmentIndex'))
+      // pre/post lines
 
-      g.append('line')
-        .attr('class', 'treatmentPost')
-        .attr('x1', xScale(testStart))
-        .attr('y1', yScale(55))
-        .attr('x2', xScale(testEnd))
-        .attr('y2', yScale(55))
-        .style('stroke', colorScale('treatmentIndex'))
+      const lineData = {
+        treatment: {
+          pre: {
+            x1: 0,
+            y1: yScale(50),
+            x2: xScale(implementationStart),
+            y2: yScale(50)
+          },
+          post: {
+            x1: xScale(testStart),
+            y1: yScale(55),
+            x2: xScale(testEnd),
+            y2: yScale(55)
+          }
+        },
+        control: {
+          pre: {
+            x1: 0,
+            y1: yScale(40),
+            x2: xScale(implementationStart),
+            y2: yScale(40)
+          },
+          post: {
+            x1: xScale(testStart),
+            y1: yScale(45),
+            x2: xScale(testEnd),
+            y2: yScale(45)
+          }
+        }
+      }
 
-      g.append('line')
-        .attr('class', 'controlPre')
-        .attr('x1', 0)
-        .attr('y1', yScale(40))
-        .attr('x2', xScale(implementationStart))
-        .attr('y2', yScale(40))
-        .style('stroke', colorScale('controlIndex'))
+      function appendAverageLine (g, data, pClass, pStroke) {
+        g.append('line')
+          .attr('class', pClass)
+          .attr('x1', data.x1)
+          .attr('y1', data.y1)
+          .attr('x2', data.x2)
+          .attr('y2', data.y2)
+          .style('stroke', colorScale(pStroke))
+      }
 
-      g.append('line')
-        .attr('class', 'controlPost')
-        .attr('x1', xScale(testStart))
-        .attr('y1', yScale(45))
-        .attr('x2', xScale(testEnd))
-        .attr('y2', yScale(45))
-        .style('stroke', colorScale('controlIndex'))
+      appendAverageLine(g, lineData.treatment.pre, 'treatmentPre', 'treatmentIndex')
+      appendAverageLine(g, lineData.treatment.post, 'treatmentPost', 'treatmentIndex')
+      appendAverageLine(g, lineData.control.pre, 'controlPre', 'controlIndex')
+      appendAverageLine(g, lineData.control.post, 'controlPost', 'controlIndex')
     })
   }
 }

@@ -57,11 +57,11 @@ export default {
     }).then((data) => {
       const dimensions = [
         {
-          id: 'treatmentIndex',
+          id: 'treatment-index',
           values: data.map((d) => { return { date: d.date, value: d.treatment_index } })
         },
         {
-          id: 'controlIndex',
+          id: 'control-index',
           values: data.map((d) => { return { date: d.date, value: d.control_index } })
         }
       ]
@@ -75,7 +75,7 @@ export default {
       colorScale.domain(dimensions.map((dim) => { return dim.id }))
 
       g.append('rect')
-        .attr('class', 'preTestBackground')
+        .attr('class', 'pre-test-background')
         .attr('x', 0)
         .attr('y', 0)
         .attr('width', xScale(testStart))
@@ -103,14 +103,14 @@ export default {
         .style('stroke', (d) => { return colorScale(d.id) })
 
       g.append('line')
-        .attr('class', 'implementationStart')
+        .attr('class', 'implementation-start line-dashed')
         .attr('x1', xScale(implementationStart))
         .attr('y1', 0)
         .attr('x2', xScale(implementationStart))
         .attr('y2', height)
 
       g.append('line')
-        .attr('class', 'testStart')
+        .attr('class', 'test-start line')
         .attr('x1', xScale(testStart))
         .attr('y1', 0)
         .attr('x2', xScale(testStart))
@@ -158,11 +158,38 @@ export default {
           .attr('y2', data.y2)
           .style('stroke', colorScale(pStroke))
       }
+      appendAverageLine(g, lineData.treatment.pre, 'treatment-pre', 'treatment-index')
+      appendAverageLine(g, lineData.treatment.post, 'treatment-post', 'treatment-index')
+      appendAverageLine(g, lineData.control.pre, 'control-pre', 'control-index')
+      appendAverageLine(g, lineData.control.post, 'control-post', 'control-index')
 
-      appendAverageLine(g, lineData.treatment.pre, 'treatmentPre', 'treatmentIndex')
-      appendAverageLine(g, lineData.treatment.post, 'treatmentPost', 'treatmentIndex')
-      appendAverageLine(g, lineData.control.pre, 'controlPre', 'controlIndex')
-      appendAverageLine(g, lineData.control.post, 'controlPost', 'controlIndex')
+      function appendMeasureLine (g, className, x, y1, y2, width) {
+        const container = g.append('g').attr('class', className)
+        const halfWidth = width * 0.5
+
+        // main line
+        container.append('line')
+          .attr('class', 'line-dashed')
+          .attr('x1', x)
+          .attr('x2', x)
+          .attr('y1', y1)
+          .attr('y2', y2)
+
+        // caps
+        container.append('line')
+          .attr('class', 'line')
+          .attr('x1', x - halfWidth)
+          .attr('x2', x + halfWidth)
+          .attr('y1', y1)
+          .attr('y2', y1)
+        container.append('line')
+          .attr('class', 'line')
+          .attr('x1', x - halfWidth)
+          .attr('x2', x + halfWidth)
+          .attr('y1', y2)
+          .attr('y2', y2)
+      }
+      appendMeasureLine(g, 'test', 50, 10, 100, 10)
     })
   }
 }
@@ -171,41 +198,15 @@ export default {
 <style lang="sass">
 .line
   fill: none
-  stroke: steelblue
+  stroke: #444444
   stroke-width: 1.5px
 
-.implementationStart
-  stroke-width: 1.5px
-  stroke: #444444
+.line-dashed
+  @extend .line
   stroke-dasharray: 4px
-  fill: none
 
-.testStart
-  stroke-width: 1.5px
-  stroke: #444444
-  fill: none
-
-.preTestBackground
+.pre-test-background
   fill: #444444
   opacity: 0.10
 
-.treatmentPre
-  fill: none
-  stroke: steelblue
-  stroke-width: 1.5px
-
-.treatmentPost
-  fill: none
-  stroke: steelblue
-  stroke-width: 1.5px
-
-.controlPre
-  fill: none
-  stroke: orange
-  stroke-width: 1.5px
-
-.controlPost
-  fill: none
-  stroke: orange
-  stroke-width: 1.5px
 </style>

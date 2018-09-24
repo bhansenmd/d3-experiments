@@ -14,11 +14,6 @@ Vue.use(Router)
 export default new Router({
   routes: [
     {
-      path: '/',
-      name: 'HelloWorld',
-      component: HelloWorld
-    },
-    {
       path: '/bubble-chart',
       name: 'BubbleChart',
       component: BubbleChart
@@ -49,7 +44,7 @@ export default new Router({
       component: MultiLineChart
     },
     {
-      path: '/chart-for-joe',
+      path: '/',
       name: 'ChartForJoe',
       component: ChartForJoe
     }

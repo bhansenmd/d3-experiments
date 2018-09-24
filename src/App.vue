@@ -1,14 +1,13 @@
 <template lang="pug">
   #app
     nav
-      router-link(to="/") Hello
+      router-link(to="/") Chart for Joe
       router-link(to="/selections") Selections
       router-link(to="/pie-chart") Pie Chart
       router-link(to="/stacked-bar-chart") Stacked Bar Chart
       <!--router-link(to="/bubble-chart") Bubble Chart-->
       router-link(to="/line-chart") Line Chart
       router-link(to="/multi-line-chart") Multi Line Chart
-      router-link(to="/chart-for-joe") Chart for Joe
     router-view
 </template>
 

@@ -11,13 +11,15 @@ import * as moment from 'moment'
 export default {
   name: 'ChartForJoe',
   mounted () {
-    const svg = d3.select(this.$el).select('svg')
+    const chartContainer = d3.select(this.$el)
+    const svg = chartContainer.select('svg')
     const margin = { top: 50, right: 50, bottom: 50, left: 50 }
 
     const width = svg.attr('width') - margin.left - margin.right
     const height = svg.attr('height') - margin.top - margin.bottom
 
     const g = svg.append('g')
+      .attr('class', 'chart')
       .attr('transform', `translate(${margin.left},${margin.top})`)
 
     const xScale = d3.scaleTime().range([0, width])
@@ -34,14 +36,6 @@ export default {
     const implementationStart = moment().add(4, 'week')
     const testStart = moment().add(6, 'week')
     const testEnd = moment().add(n - 1, 'week')
-
-    // const parseTime = d3.timeParse('%Y-%m-%d')
-    //
-    // d3.csv('/static/chart-for-joe.csv', (d) => {
-    //   d.date_week = parseTime(d.date_week)
-    //   return d
-    // }).then((data) => {
-    // })
 
     new Promise((resolve) => {
       const randomUniform = d3.randomUniform(100)
@@ -74,24 +68,26 @@ export default {
 
       colorScale.domain(dimensions.map((dim) => { return dim.id }))
 
-      g.append('rect')
+      const xAxisMaker = d3.axisBottom(xScale)
+        .tickValues([preStart, implementationStart, testStart, testEnd])
+        .tickFormat(d3.timeFormat('%b %d'))
+
+      const indexChart = g.append('g').attr('class', 'indexChart')
+
+      indexChart.append('rect')
         .attr('class', 'pre-test-background')
         .attr('x', 0)
         .attr('y', 0)
         .attr('width', xScale(testStart))
         .attr('height', height)
 
-      const xAxis = d3.axisBottom(xScale)
-        .tickValues([preStart, implementationStart, testStart, testEnd])
-        .tickFormat(d3.timeFormat('%b %d'))
-
       // first chart
-      g.append('g')
-        .attr('class', 'x-axis')
+      const xAxis = g.append('g')
+        .attr('class', 'xAxis')
         .attr('transform', `translate(0,${height})`)
-        .call(xAxis)
+        .call(xAxisMaker)
 
-      const dimension = g.selectAll('.dimension')
+      const dimension = indexChart.selectAll('.dimension')
         .attr('class', 'dimension')
         .data(dimensions)
         .enter()
@@ -102,23 +98,21 @@ export default {
         .attr('d', (d) => { return line(d.values) })
         .style('stroke', (d) => { return colorScale(d.id) })
 
-      g.append('line')
+      indexChart.append('line')
         .attr('class', 'implementation-start line-dashed')
         .attr('x1', xScale(implementationStart))
         .attr('y1', 0)
         .attr('x2', xScale(implementationStart))
         .attr('y2', height)
 
-      g.append('line')
+      indexChart.append('line')
         .attr('class', 'test-start line')
         .attr('x1', xScale(testStart))
         .attr('y1', 0)
         .attr('x2', xScale(testStart))
         .attr('y2', height)
 
-      // pre/post lines
-
-      const lineData = {
+      const diffData = {
         treatment: {
           pre: {
             x1: 0,
@@ -149,8 +143,9 @@ export default {
         }
       }
 
-      function appendAverageLine (g, data, pClass, pStroke) {
-        g.append('line')
+      const averageLines = g.append('g').attr('class', 'averageLines')
+      function appendAverageLine (data, pClass, pStroke) {
+        averageLines.append('line')
           .attr('class', pClass)
           .attr('x1', data.x1)
           .attr('y1', data.y1)
@@ -158,13 +153,15 @@ export default {
           .attr('y2', data.y2)
           .style('stroke', colorScale(pStroke))
       }
-      appendAverageLine(g, lineData.treatment.pre, 'treatment-pre', 'treatment-index')
-      appendAverageLine(g, lineData.treatment.post, 'treatment-post', 'treatment-index')
-      appendAverageLine(g, lineData.control.pre, 'control-pre', 'control-index')
-      appendAverageLine(g, lineData.control.post, 'control-post', 'control-index')
+      appendAverageLine(diffData.treatment.pre, 'treatment-pre', 'treatment-index')
+      appendAverageLine(diffData.treatment.post, 'treatment-post', 'treatment-index')
+      appendAverageLine(diffData.control.pre, 'control-pre', 'control-index')
+      appendAverageLine(diffData.control.post, 'control-post', 'control-index')
 
-      function appendMeasureLine (g, className, x, y1, y2, width) {
-        const container = g.append('g').attr('class', className)
+      const xPadding = 10
+      const diffMeasures = g.append('g').attr('class', 'diffMeasures')
+      function appendMeasureLine (group, className, x, y1, y2, width, text) {
+        const container = group.append('g').attr('class', className)
         const halfWidth = width * 0.5
 
         // main line
@@ -188,8 +185,97 @@ export default {
           .attr('x2', x + halfWidth)
           .attr('y1', y2)
           .attr('y2', y2)
+
+        // text
+        container.append('text')
+          .attr('x', x + halfWidth)
+          .attr('y', (y1 + y2) / 2)
+          .text(text)
+          .style('font-size', '10')
+          .style('background', 'white')
+          .style('alignment-baseline', 'central')
       }
-      appendMeasureLine(g, 'test', 50, 10, 100, 10)
+      appendMeasureLine(diffMeasures, 'treatment-diff-measure', diffData.treatment.pre.x2 + xPadding,
+        diffData.treatment.pre.y1, diffData.treatment.post.y1, 10, 'Treatment Diff')
+      appendMeasureLine(diffMeasures, 'control-diff-measure', diffData.control.pre.x2 + xPadding,
+        diffData.control.pre.y1, diffData.control.post.y1, 10, 'Control Diff')
+      appendMeasureLine(diffMeasures, 'lift-measure', diffData.treatment.post.x1 - xPadding,
+        diffData.treatment.post.y1, diffData.control.post.y1, 10, 'Lift')
+
+      const liftText = g.append('text')
+        .attr('x', width / 2)
+        .attr('y', height / 2)
+        .attr('class', 'liftText')
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '30')
+        .text('+3.0%')
+
+      // animation
+
+      function hideAll (duration) {
+        const transition = d3.transition()
+          .duration(duration || 0)
+          .ease(d3.easeLinear)
+
+        indexChart.transition(transition).style('opacity', 0)
+        xAxis.transition(transition).style('opacity', 0)
+        averageLines.transition(transition).style('opacity', 0)
+        diffMeasures.transition(transition).style('opacity', 0)
+        liftText.transition(transition).style('opacity', 0)
+      }
+      hideAll()
+      chartContainer.append('button')
+        .on('click', () => { hideAll(1250) })
+        .text('Hide All')
+
+      const transition = d3.transition()
+        .duration(1250)
+        .ease(d3.easeLinear)
+
+      function showIndexChart () {
+        indexChart.transition(transition).style('opacity', 1)
+        xAxis.transition(transition).style('opacity', 1)
+        averageLines.transition(transition).style('opacity', 0)
+        diffMeasures.transition(transition).style('opacity', 0)
+        liftText.transition(transition).style('opacity', 0)
+      }
+      showIndexChart()
+      chartContainer.append('button')
+        .text('Show Index Chart')
+        .on('click', showIndexChart)
+
+      function showAverageLines () {
+        indexChart.transition(transition).style('opacity', 1)
+        xAxis.transition(transition).style('opacity', 1)
+        averageLines.transition(transition).style('opacity', 1)
+        diffMeasures.transition(transition).style('opacity', 0)
+        liftText.transition(transition).style('opacity', 0)
+      }
+      chartContainer.append('button')
+        .text('Show Average Lines')
+        .on('click', showAverageLines)
+
+      function showDiffMeasures () {
+        indexChart.transition(transition).style('opacity', 0)
+        xAxis.transition(transition).style('opacity', 1)
+        averageLines.transition(transition).style('opacity', 1)
+        diffMeasures.transition(transition).style('opacity', 1)
+        liftText.transition(transition).style('opacity', 0)
+      }
+      chartContainer.append('button')
+        .text('Show Diff Measures')
+        .on('click', showDiffMeasures)
+
+      function showLift () {
+        indexChart.transition(transition).style('opacity', 0)
+        xAxis.transition(transition).style('opacity', 0)
+        averageLines.transition(transition).style('opacity', 0)
+        diffMeasures.transition(transition).style('opacity', 0)
+        liftText.transition(transition).style('opacity', 1)
+      }
+      chartContainer.append('button')
+        .text('Show Lift')
+        .on('click', showLift)
     })
   }
 }

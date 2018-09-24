@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import HelloWorld from '@/components/HelloWorld'
 import BubbleChart from '@/components/BubbleChart'
 import Selections from '@/components/Selections'
 import PieChart from '@/components/PieChart'

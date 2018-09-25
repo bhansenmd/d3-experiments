@@ -15,8 +15,10 @@ export default {
     const svg = chartContainer.select('svg')
     const margin = { top: 50, right: 50, bottom: 50, left: 50 }
 
-    const width = svg.attr('width') - margin.left - margin.right
-    const height = svg.attr('height') - margin.top - margin.bottom
+    const svgWidth = svg.attr('width')
+    const width = svgWidth - margin.left - margin.right
+    const svgHeight = svg.attr('height')
+    const height = svgHeight - margin.top - margin.bottom
 
     const g = svg.append('g')
       .attr('class', 'chart')
@@ -161,35 +163,40 @@ export default {
       const xPadding = 10
       const diffMeasures = g.append('g').attr('class', 'diffMeasures')
       function appendMeasureLine (group, className, x, y1, y2, width, text) {
-        const container = group.append('g').attr('class', className)
+        const topY = d3.min([y1, y2])
+        const height = Math.abs(y1 - y2)
+
+        const container = group.append('g')
+          .attr('class', className)
+          .attr('transform', `translate(${x},${topY})`)
         const halfWidth = width * 0.5
 
         // main line
         container.append('line')
           .attr('class', 'line-dashed')
-          .attr('x1', x)
-          .attr('x2', x)
-          .attr('y1', y1)
-          .attr('y2', y2)
+          .attr('x1', 0)
+          .attr('x2', 0)
+          .attr('y1', 0)
+          .attr('y2', height)
 
         // caps
         container.append('line')
           .attr('class', 'line')
-          .attr('x1', x - halfWidth)
-          .attr('x2', x + halfWidth)
-          .attr('y1', y1)
-          .attr('y2', y1)
+          .attr('x1', -halfWidth)
+          .attr('x2', +halfWidth)
+          .attr('y1', 0)
+          .attr('y2', 0)
         container.append('line')
           .attr('class', 'line')
-          .attr('x1', x - halfWidth)
-          .attr('x2', x + halfWidth)
-          .attr('y1', y2)
-          .attr('y2', y2)
+          .attr('x1', -halfWidth)
+          .attr('x2', +halfWidth)
+          .attr('y1', height)
+          .attr('y2', height)
 
         // text
         container.append('text')
-          .attr('x', x + halfWidth)
-          .attr('y', (y1 + y2) / 2)
+          .attr('x', halfWidth)
+          .attr('y', height / 2)
           .text(text)
           .style('font-size', '10')
           .style('background', 'white')

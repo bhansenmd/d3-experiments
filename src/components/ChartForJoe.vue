@@ -114,100 +114,113 @@ export default {
         .attr('x2', xScale(testStart))
         .attr('y2', height)
 
-      const diffData = {
-        treatment: {
-          pre: {
-            x1: 0,
-            y1: yScale(50),
-            x2: xScale(implementationStart),
-            y2: yScale(50)
-          },
-          post: {
-            x1: xScale(testStart),
-            y1: yScale(55),
-            x2: xScale(testEnd),
-            y2: yScale(55)
-          }
+      const averageLinesData = [
+        {
+          name: 'treatment-pre',
+          stroke: 'treatment-index',
+          x1: 0,
+          x2: xScale(implementationStart),
+          y1: yScale(50),
+          y2: yScale(50)
         },
-        control: {
-          pre: {
-            x1: 0,
-            y1: yScale(40),
-            x2: xScale(implementationStart),
-            y2: yScale(40)
-          },
-          post: {
-            x1: xScale(testStart),
-            y1: yScale(45),
-            x2: xScale(testEnd),
-            y2: yScale(45)
-          }
+        {
+          name: 'treatment-post',
+          stroke: 'treatment-index',
+          x1: xScale(testStart),
+          y1: yScale(55),
+          x2: xScale(testEnd),
+          y2: yScale(55)
+        },
+        {
+          name: 'control-pre',
+          stroke: 'control-index',
+          x1: 0,
+          y1: yScale(40),
+          x2: xScale(implementationStart),
+          y2: yScale(40)
+        },
+        {
+          name: 'control-post',
+          stroke: 'control-index',
+          x1: xScale(testStart),
+          y1: yScale(45),
+          x2: xScale(testEnd),
+          y2: yScale(45)
         }
-      }
+      ]
 
-      const averageLines = g.append('g').attr('class', 'averageLines')
-      function appendAverageLine (data, pClass, pStroke) {
-        averageLines.append('line')
-          .attr('class', pClass)
-          .attr('x1', data.x1)
-          .attr('y1', data.y1)
-          .attr('x2', data.x2)
-          .attr('y2', data.y2)
-          .style('stroke', colorScale(pStroke))
-      }
-      appendAverageLine(diffData.treatment.pre, 'treatment-pre', 'treatment-index')
-      appendAverageLine(diffData.treatment.post, 'treatment-post', 'treatment-index')
-      appendAverageLine(diffData.control.pre, 'control-pre', 'control-index')
-      appendAverageLine(diffData.control.post, 'control-post', 'control-index')
+      const averageLinesGroup = g.append('g')
+        .attr('class', 'averageLinesGroup')
+
+      const averageLines = averageLinesGroup.selectAll('line')
+        .data(averageLinesData)
+
+      averageLines.enter()
+        .append('line')
+        .attr('class', (d) => { return d.name })
+        .attr('x1', (d) => { return d.x1 })
+        .attr('x2', (d) => { return d.x2 })
+        .attr('y1', (d) => { return d.y1 })
+        .attr('y2', (d) => { return d.y2 })
+        .style('stroke', (d) => { return colorScale(d.stroke) })
+
+      averageLines.exit().remove()
 
       const xPadding = 10
-      const diffMeasures = g.append('g').attr('class', 'diffMeasures')
-      function appendMeasureLine (group, className, x, y1, y2, width, text) {
-        const topY = d3.min([y1, y2])
-        const height = Math.abs(y1 - y2)
+      const measureData = [
+        {
+          name: 'treatment-diff-measure',
+          text: 'Treatment Diff',
+          x: xScale(implementationStart) + xPadding,
+          y: Math.min(yScale(55), yScale(50)),
+          width: 10,
+          height: Math.abs(yScale(55) - yScale(50))
+        },
+        {
+          name: 'control-diff-measure',
+          text: 'Control Diff',
+          x: xScale(implementationStart) + xPadding,
+          y: Math.min(yScale(45), yScale(40)),
+          width: 10,
+          height: Math.abs(yScale(45) - yScale(40))
+        }
+      ]
+      const measureGroup = g.append('g').attr('class', 'measureGroup')
+      const measures = measureGroup.selectAll('.measure')
+        .data(measureData)
 
-        const container = group.append('g')
-          .attr('class', className)
-          .attr('transform', `translate(${x},${topY})`)
-        const halfWidth = width * 0.5
+      const newMeasures = measures.enter()
+        .append('g')
+        .attr('class', (d) => { return `measure ${d.name}` })
+        .attr('transform', (d) => { return `translate(${d.x},${d.y})` })
 
-        // main line
-        container.append('line')
-          .attr('class', 'line-dashed')
-          .attr('x1', 0)
-          .attr('x2', 0)
-          .attr('y1', 0)
-          .attr('y2', height)
+      newMeasures.append('line')
+        .attr('class', 'line-dashed')
+        .attr('x1', 0)
+        .attr('x2', 0)
+        .attr('y1', 0)
+        .attr('y1', (d) => { return d.height })
 
-        // caps
-        container.append('line')
-          .attr('class', 'line')
-          .attr('x1', -halfWidth)
-          .attr('x2', +halfWidth)
-          .attr('y1', 0)
-          .attr('y2', 0)
-        container.append('line')
-          .attr('class', 'line')
-          .attr('x1', -halfWidth)
-          .attr('x2', +halfWidth)
-          .attr('y1', height)
-          .attr('y2', height)
+      newMeasures.append('line')
+        .attr('class', 'line')
+        .attr('x1', (d) => { return -d.width / 2 })
+        .attr('x2', (d) => { return +d.width / 2 })
+        .attr('y1', 0)
+        .attr('y2', 0)
 
-        // text
-        container.append('text')
-          .attr('x', halfWidth)
-          .attr('y', height / 2)
-          .text(text)
-          .style('font-size', '10')
-          .style('background', 'white')
-          .style('alignment-baseline', 'central')
-      }
-      appendMeasureLine(diffMeasures, 'treatment-diff-measure', diffData.treatment.pre.x2 + xPadding,
-        diffData.treatment.pre.y1, diffData.treatment.post.y1, 10, 'Treatment Diff')
-      appendMeasureLine(diffMeasures, 'control-diff-measure', diffData.control.pre.x2 + xPadding,
-        diffData.control.pre.y1, diffData.control.post.y1, 10, 'Control Diff')
-      appendMeasureLine(diffMeasures, 'lift-measure', diffData.treatment.post.x1 - xPadding,
-        diffData.treatment.post.y1, diffData.control.post.y1, 10, 'Lift')
+      newMeasures.append('line')
+        .attr('class', 'line')
+        .attr('x1', (d) => { return -d.width / 2 })
+        .attr('x2', (d) => { return +d.width / 2 })
+        .attr('y1', (d) => { return d.height })
+        .attr('y2', (d) => { return d.height })
+
+      newMeasures.append('text')
+        .attr('x', (d) => { return d.width / 2 })
+        .attr('y', (d) => { return d.height / 2 })
+        .text((d) => { return d.text })
+        .style('font-size', '10')
+        .style('alignment-baseline', 'central')
 
       const liftText = g.append('text')
         .attr('x', width / 2)
@@ -226,8 +239,8 @@ export default {
 
         indexChart.transition(transition).style('opacity', 0)
         xAxis.transition(transition).style('opacity', 0)
-        averageLines.transition(transition).style('opacity', 0)
-        diffMeasures.transition(transition).style('opacity', 0)
+        averageLinesGroup.transition(transition).style('opacity', 0)
+        measureGroup.transition(transition).style('opacity', 0)
         liftText.transition(transition).style('opacity', 0)
       }
       hideAll()
@@ -242,8 +255,8 @@ export default {
       function showIndexChart () {
         indexChart.transition(transition).style('opacity', 1)
         xAxis.transition(transition).style('opacity', 1)
-        averageLines.transition(transition).style('opacity', 0)
-        diffMeasures.transition(transition).style('opacity', 0)
+        averageLinesGroup.transition(transition).style('opacity', 0)
+        measureGroup.transition(transition).style('opacity', 0)
         liftText.transition(transition).style('opacity', 0)
       }
       showIndexChart()
@@ -254,8 +267,8 @@ export default {
       function showAverageLines () {
         indexChart.transition(transition).style('opacity', 1)
         xAxis.transition(transition).style('opacity', 1)
-        averageLines.transition(transition).style('opacity', 1)
-        diffMeasures.transition(transition).style('opacity', 0)
+        averageLinesGroup.transition(transition).style('opacity', 1)
+        measureGroup.transition(transition).style('opacity', 0)
         liftText.transition(transition).style('opacity', 0)
       }
       chartContainer.append('button')
@@ -265,8 +278,8 @@ export default {
       function showDiffMeasures () {
         indexChart.transition(transition).style('opacity', 0)
         xAxis.transition(transition).style('opacity', 1)
-        averageLines.transition(transition).style('opacity', 1)
-        diffMeasures.transition(transition).style('opacity', 1)
+        averageLinesGroup.transition(transition).style('opacity', 1)
+        measureGroup.transition(transition).style('opacity', 1)
         liftText.transition(transition).style('opacity', 0)
       }
       chartContainer.append('button')
@@ -276,8 +289,8 @@ export default {
       function showLift () {
         indexChart.transition(transition).style('opacity', 0)
         xAxis.transition(transition).style('opacity', 0)
-        averageLines.transition(transition).style('opacity', 0)
-        diffMeasures.transition(transition).style('opacity', 0)
+        averageLinesGroup.transition(transition).style('opacity', 0)
+        measureGroup.transition(transition).style('opacity', 0)
         liftText.transition(transition).style('opacity', 1)
       }
       chartContainer.append('button')
